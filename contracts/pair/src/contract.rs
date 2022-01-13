@@ -1,6 +1,5 @@
 use crate::math::{calc_in_given_out, calc_out_given_in, uint2dec};
 use crate::response::MsgInstantiateContractResponse;
-
 use crate::state::PAIR_INFO;
 
 use astroport_lbp::U256;
@@ -679,8 +678,12 @@ fn compute_offer_amount(
 
     let one_minus_commission = Decimal256::one() - Decimal256::from_str(COMMISSION_RATE).unwrap();
 
+    // temp workaround for lacking From in Decimal256
+    let converter: u64 = 1;
+    let converter = cosmwasm_bignumber::Uint256::from(converter);
+    let ask_multiplier: Uint128 = Uint128::from((Decimal256::one() / one_minus_commission) * converter);
     let before_commission_deduction =
-        ask_amount * (Decimal256::one() / one_minus_commission).into();
+        ask_amount * ask_multiplier;
 
     let offer_amount = calc_in_given_out(
         offer_pool,
